@@ -6,7 +6,230 @@
     <title>YURI_LOVE_COUNTER_v1.0</title>
     <style>
         :root {
+            --hacker-green: #00ff41<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>YURI_ETERNAL_LOG_v2.0</title>
+    <style>
+        :root {
             --hacker-green: #00ff41;
+            --sakura-pink: #ff85a1;
+            --heart-red: #ff3e6c;
+            --cyber-blue: #00f2ff;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: "Hiragino Maru Gothic ProN", "Yu Gothic UI", "Meiryo", sans-serif;
+            color: #fff;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0; left: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 永続化ストレージ表示 */
+        #counter-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.85);
+            border-left: 5px solid var(--cyber-blue);
+            padding: 12px 25px;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+        }
+
+        .label {
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: var(--cyber-blue);
+            margin-bottom: 4px;
+        }
+
+        #count-num {
+            font-size: 32px;
+            font-weight: 900;
+            display: block;
+            color: #fff;
+            text-shadow: 0 0 15px var(--sakura-pink);
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        /* 写真フレーム */
+        #frame {
+            position: absolute;
+            top: 48%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 82vw;
+            max-width: 380px;
+            aspect-ratio: 3/4;
+            z-index: 10;
+            border: 3px solid #fff;
+            background: #111;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(255, 133, 161, 0.5);
+            transition: transform 0.1s;
+        }
+
+        #frame:active { transform: translate(-50%, -50%) scale(0.96); }
+
+        #frame img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+
+        /* メッセージパネル */
+        #compliment-panel {
+            position: absolute;
+            bottom: 30px; left: 0; width: 100%;
+            z-index: 30;
+            text-align: center;
+            font-weight: 900;
+            font-size: 6.5vw;
+            background: linear-gradient(transparent, rgba(255, 62, 108, 0.4), transparent);
+            padding: 20px 0;
+            pointer-events: none;
+        }
+
+        .compliment-main {
+            display: block;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #signature {
+            position: absolute;
+            bottom: 8px; right: 10px;
+            z-index: 20;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 1px;
+        }
+
+        @media (min-width: 768px) {
+            #compliment-panel { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="counter-display">
+        <div class="label">LOCAL_DB: ETERNAL_LOVE_LOG</div>
+        <span id="count-num">000000</span>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <div id="signature">ARCHITECTED BY DAICHI</div>
+
+    <div id="frame" onmousedown="addHeart(event)" ontouchstart="addHeart(event)">
+        <img src="yuri_photo.jpg" alt="Target: Yuri">
+    </div>
+
+    <div id="compliment-panel">
+        <span class="compliment-main">この5年でみた女性の中で</span>
+        <span class="compliment-main">一番かわいい。ッ！！！</span>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const countDisplay = document.getElementById('count-num');
+
+        // --- 蓄積システム (localStorage) ---
+        // 保存されている値を取得、なければ0からスタート
+        let loveCount = parseInt(localStorage.getItem('yuri_love_total')) || 0;
+        
+        // 初回表示の更新
+        updateDisplay();
+
+        function updateDisplay() {
+            countDisplay.innerText = String(loveCount).padStart(6, '0');
+        }
+
+        function saveCount() {
+            localStorage.setItem('yuri_love_total', loveCount);
+        }
+
+        let hearts = [];
+
+        function init() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Heart {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 25 + 15;
+                this.vX = (Math.random() - 0.5) * 12;
+                this.vY = -Math.random() * 15 - 5;
+                this.opacity = 1;
+                this.gravity = 0.4;
+                this.color = `hsla(${Math.random() * 20 + 340}, 100%, 65%, 1)`;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                const x = this.x; const y = this.y; const s = this.size;
+                ctx.moveTo(x, y);
+                ctx.bezierCurveTo(x - s/2, y - s/2, x - s, y + s/3, x, y + s);
+                ctx.bezierCurveTo(x + s, y + s/3, x + s/2, y - s/2, x, y);
+                ctx.fill();
+                ctx.restore();
+            }
+            update() {
+                this.x += this.vX;
+                this.y += this.vY;
+                this.vY += this.gravity;
+                this.opacity -= 0.015;
+            }
+        }
+
+        function addHeart(e) {
+            // イベントの重複防止
+            if (e.type === 'touchstart') e.preventDefault();
+            
+            loveCount++;
+            updateDisplay();
+            saveCount(); // ストレージに即座に書き込み
+
+            const posX = e.clientX || (e.touches && e.touches[0].clientX);
+            const posY = e.clientY || (e.touches && e.touches[0].clientY);
+            
+            for(let i=0; i<6; i++) {
+                hearts.push(new Heart(posX, posY));
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for(let i = hearts.length - 1; i >= 0; i--) {
+                hearts[i].update();
+                hearts[i].draw();
+                if(hearts[i].opacity <= 0) hearts.splice(i, 1);
+            }
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', init);
+        init();
+        animate();
+    </script>
+</body>
+</html>;
             --sakura-pink: #ff85a1;
             --heart-red: #ff3e6c;
             --cyber-blue: #00f2ff;
