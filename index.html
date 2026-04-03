@@ -3,440 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>YURI_LOVE_COUNTER_v1.0</title>
+    <title>YURI_STABLE_LOG_v3.0</title>
     <style>
-        :root {
-            --hacker-green: #00ff41<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>YURI_ETERNAL_LOG_v2.0</title>
-    <style>
-        :root {
-            --hacker-green: #00ff41;
-            --sakura-pink: #ff85a1;
-            --heart-red: #ff3e6c;
-            --cyber-blue: #00f2ff;
-        }
-
         body, html {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            overflow: hidden;
-            background-color: #000;
-            font-family: "Hiragino Maru Gothic ProN", "Yu Gothic UI", "Meiryo", sans-serif;
-            color: #fff;
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: #000;
+            font-family: "Hiragino Maru Gothic ProN", sans-serif;
         }
-
-        canvas {
-            position: absolute;
-            top: 0; left: 0;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        /* 永続化ストレージ表示 */
-        #counter-display {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 100;
-            background: rgba(0, 0, 0, 0.85);
-            border-left: 5px solid var(--cyber-blue);
-            padding: 12px 25px;
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
-        }
-
-        .label {
-            font-size: 10px;
-            letter-spacing: 1px;
-            color: var(--cyber-blue);
-            margin-bottom: 4px;
-        }
-
-        #count-num {
-            font-size: 32px;
-            font-weight: 900;
-            display: block;
-            color: #fff;
-            text-shadow: 0 0 15px var(--sakura-pink);
-            font-family: 'Courier New', Courier, monospace;
-        }
-
-        /* 写真フレーム */
-        #frame {
-            position: absolute;
-            top: 48%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 82vw;
-            max-width: 380px;
-            aspect-ratio: 3/4;
-            z-index: 10;
-            border: 3px solid #fff;
-            background: #111;
-            overflow: hidden;
-            cursor: pointer;
-            box-shadow: 0 0 30px rgba(255, 133, 161, 0.5);
-            transition: transform 0.1s;
-        }
-
-        #frame:active { transform: translate(-50%, -50%) scale(0.96); }
-
-        #frame img {
-            width: 100%; height: 100%;
-            object-fit: cover;
-        }
-
-        /* メッセージパネル */
-        #compliment-panel {
-            position: absolute;
-            bottom: 30px; left: 0; width: 100%;
-            z-index: 30;
-            text-align: center;
-            font-weight: 900;
-            font-size: 6.5vw;
-            background: linear-gradient(transparent, rgba(255, 62, 108, 0.4), transparent);
-            padding: 20px 0;
-            pointer-events: none;
-        }
-
-        .compliment-main {
-            display: block;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        #signature {
-            position: absolute;
-            bottom: 8px; right: 10px;
-            z-index: 20;
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.4);
-            letter-spacing: 1px;
-        }
-
-        @media (min-width: 768px) {
-            #compliment-panel { font-size: 2.5rem; }
-        }
-    </style>
-</head>
-<body>
-
-    <div id="counter-display">
-        <div class="label">LOCAL_DB: ETERNAL_LOVE_LOG</div>
-        <span id="count-num">000000</span>
-    </div>
-
-    <canvas id="canvas"></canvas>
-
-    <div id="signature">ARCHITECTED BY DAICHI</div>
-
-    <div id="frame" onmousedown="addHeart(event)" ontouchstart="addHeart(event)">
-        <img src="yuri_photo.jpg" alt="Target: Yuri">
-    </div>
-
-    <div id="compliment-panel">
-        <span class="compliment-main">この5年でみた女性の中で</span>
-        <span class="compliment-main">一番かわいい。ッ！！！</span>
-    </div>
-
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const countDisplay = document.getElementById('count-num');
-
-        // --- 蓄積システム (localStorage) ---
-        // 保存されている値を取得、なければ0からスタート
-        let loveCount = parseInt(localStorage.getItem('yuri_love_total')) || 0;
+        canvas { position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
         
-        // 初回表示の更新
-        updateDisplay();
-
-        function updateDisplay() {
-            countDisplay.innerText = String(loveCount).padStart(6, '0');
+        /* ステータス表示 */
+        #hud {
+            position: absolute; top: 20px; left: 20px; z-index: 100;
+            color: #00f2ff; font-size: 12px; background: rgba(0,0,0,0.7);
+            padding: 10px; border-left: 3px solid #ff85a1;
         }
+        #count-num { font-size: 30px; color: #fff; display: block; font-family: monospace; }
 
-        function saveCount() {
-            localStorage.setItem('yuri_love_total', loveCount);
-        }
-
-        let hearts = [];
-
-        function init() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-
-        class Heart {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.size = Math.random() * 25 + 15;
-                this.vX = (Math.random() - 0.5) * 12;
-                this.vY = -Math.random() * 15 - 5;
-                this.opacity = 1;
-                this.gravity = 0.4;
-                this.color = `hsla(${Math.random() * 20 + 340}, 100%, 65%, 1)`;
-            }
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = this.opacity;
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                const x = this.x; const y = this.y; const s = this.size;
-                ctx.moveTo(x, y);
-                ctx.bezierCurveTo(x - s/2, y - s/2, x - s, y + s/3, x, y + s);
-                ctx.bezierCurveTo(x + s, y + s/3, x + s/2, y - s/2, x, y);
-                ctx.fill();
-                ctx.restore();
-            }
-            update() {
-                this.x += this.vX;
-                this.y += this.vY;
-                this.vY += this.gravity;
-                this.opacity -= 0.015;
-            }
-        }
-
-        function addHeart(e) {
-            // イベントの重複防止
-            if (e.type === 'touchstart') e.preventDefault();
-            
-            loveCount++;
-            updateDisplay();
-            saveCount(); // ストレージに即座に書き込み
-
-            const posX = e.clientX || (e.touches && e.touches[0].clientX);
-            const posY = e.clientY || (e.touches && e.touches[0].clientY);
-            
-            for(let i=0; i<6; i++) {
-                hearts.push(new Heart(posX, posY));
-            }
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for(let i = hearts.length - 1; i >= 0; i--) {
-                hearts[i].update();
-                hearts[i].draw();
-                if(hearts[i].opacity <= 0) hearts.splice(i, 1);
-            }
-            requestAnimationFrame(animate);
-        }
-
-        window.addEventListener('resize', init);
-        init();
-        animate();
-    </script>
-</body>
-</html>;
-            --sakura-pink: #ff85a1;
-            --heart-red: #ff3e6c;
-            --cyber-blue: #00f2ff;
-        }
-
-        body, html {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            overflow: hidden;
-            background-color: #000;
-            /* かわいい丸文字系のフォント指定 */
-            font-family: "Hiragino Maru Gothic ProN", "Yu Gothic UI", "Meiryo", sans-serif;
-            color: #fff;
-        }
-
-        canvas {
-            position: absolute;
-            top: 0; left: 0;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        /* 累積カウント表示（ハッカー端末風） */
-        #counter-display {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 100;
-            background: rgba(0, 0, 0, 0.8);
-            border-left: 5px solid var(--sakura-pink);
-            padding: 10px 20px;
-            font-size: 14px;
-            color: var(--sakura-pink);
-            box-shadow: 0 0 15px rgba(255, 133, 161, 0.4);
-        }
-
-        #count-num {
-            font-size: 28px;
-            font-weight: 900;
-            display: block;
-            color: #fff;
-            text-shadow: 0 0 10px var(--sakura-pink);
-        }
-
-        /* センターユニット */
-        #frame {
-            position: absolute;
-            top: 45%; left: 50%;
+        /* メイン写真 */
+        #center-ui {
+            position: absolute; top: 45%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 80vw;
-            max-width: 380px;
-            aspect-ratio: 3/4;
-            z-index: 10;
-            border: 4px solid var(--hacker-green);
-            background: #000;
-            overflow: hidden;
-            cursor: pointer;
-            animation: glitch-frame 0.2s infinite;
+            width: 85vw; max-width: 350px; aspect-ratio: 3/4;
+            z-index: 10; border: 4px solid #fff;
+            box-shadow: 0 0 20px rgba(255,133,161,0.5);
+            background: #222; overflow: hidden;
         }
+        #center-ui img { width: 100%; height: 100%; object-fit: cover; }
 
-        #frame img {
-            width: 100%; height: 100%;
-            object-fit: cover;
-            filter: contrast(1.2);
-        }
-
-        /* 賛辞パネル：読みやすい「かわいい」フォント */
-        #compliment-panel {
-            position: absolute;
-            bottom: 40px; left: 0; width: 100%;
-            z-index: 30;
-            text-align: center;
-            font-weight: 900;
-            font-size: 6.5vw;
-            line-height: 1.4;
-            color: #fff;
-            background: rgba(255, 62, 108, 0.2);
-            backdrop-filter: blur(5px);
-            padding: 15px 0;
-            border-top: 3px solid var(--heart-red);
-            border-bottom: 3px solid var(--heart-red);
-            display: none; /* タップで解放 */
-        }
-
-        .compliment-main {
-            text-shadow: 2px 2px 0 var(--heart-red), -1px -1px 0 #000;
-        }
-
-        #signature {
-            position: absolute;
-            bottom: 10px; right: 10px;
-            z-index: 20;
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.3);
-        }
-
-        /* アニメーション */
-        @keyframes glitch-frame {
-            0%, 100% { transform: translate(-50%, -50%) skew(0deg); }
-            50% { transform: translate(-50%, -51%) skew(1deg); }
-        }
-
-        @media (min-width: 768px) {
-            #compliment-panel { font-size: 2.2rem; }
+        /* メッセージ */
+        #msg {
+            position: absolute; bottom: 40px; width: 100%;
+            text-align: center; z-index: 30; color: #fff;
+            font-weight: bold; font-size: 1.5rem; line-height: 1.5;
+            text-shadow: 2px 2px 10px #ff3e6c;
         }
     </style>
 </head>
 <body>
 
-    <div id="counter-display">
-        LOVE_LOG_STORAGE
-        <span id="count-num">000000</span>
-    </div>
+<div id="hud">
+    DATA_STORAGE: ACTIVE
+    <span id="count-num">000000</span>
+</div>
 
-    <canvas id="canvas"></canvas>
+<div id="center-ui" id="photo-frame">
+    <img src="yuri_photo.jpg" alt="Yuri" onerror="this.style.display='none'; alert('画像(yuri_photo.jpg)が見つかりません！')">
+</div>
 
-    <div id="signature">SYSTEM DESIGNED BY DAICHI</div>
+<div id="msg">
+    この5年でみた女性の中で<br>
+    一番かわいい。ッ！！！
+</div>
 
-    <div id="frame" onclick="addHeart(event)">
-        <img src="yuri_photo.jpg" alt="Critical_Asset: Yuri">
-    </div>
+<canvas id="canvas"></canvas>
 
-    <div id="compliment-panel">
-        <div class="compliment-main">この5年でみた女性の中で</div>
-        <div class="compliment-main">一番かわいい。ッ！！！</div>
-    </div>
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const countEl = document.getElementById('count-num');
+    let loveCount = 0;
 
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const countDisplay = document.getElementById('count-num');
-        const compliment = document.getElementById('compliment-panel');
+    // --- 安全なストレージ機能 ---
+    try {
+        loveCount = parseInt(localStorage.getItem('yuri_count')) || 0;
+    } catch(e) {
+        console.log("Storage access denied");
+    }
+    updateDisplay();
 
-        let loveCount = 0;
-        let elements = [];
+    function updateDisplay() {
+        countEl.innerText = String(loveCount).padStart(6, '0');
+    }
 
-        function init() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+    // --- エフェクト ---
+    let hearts = [];
+    class Heart {
+        constructor(x, y) {
+            this.x = x; this.y = y;
+            this.s = Math.random() * 20 + 15;
+            this.vx = (Math.random() - 0.5) * 10;
+            this.vy = -Math.random() * 15 - 5;
+            this.o = 1;
         }
-
-        // ハートクラス
-        class Heart {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.size = Math.random() * 20 + 20;
-                this.vX = (Math.random() - 0.5) * 10;
-                this.vY = -Math.random() * 10 - 5;
-                this.opacity = 1;
-                this.gravity = 0.2;
-            }
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = this.opacity;
-                ctx.fillStyle = '#ff3e6c';
-                ctx.beginPath();
-                ctx.moveTo(this.x, this.y);
-                ctx.bezierCurveTo(this.x - this.size/2, this.y - this.size/2, this.x - this.size, this.y + this.size/3, this.x, this.y + this.size);
-                ctx.bezierCurveTo(this.x + this.size, this.y + this.size/3, this.x + this.size/2, this.y - this.size/2, this.x, this.y);
-                ctx.fill();
-                ctx.restore();
-            }
-            update() {
-                this.x += this.vX;
-                this.y += this.vY;
-                this.vY += this.gravity;
-                this.opacity -= 0.02;
-            }
+        draw() {
+            ctx.globalAlpha = this.o;
+            ctx.fillStyle = '#ff3e6c';
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y);
+            ctx.bezierCurveTo(this.x-this.s, this.y-this.s, this.x-this.s*1.5, this.y+this.s/2, this.x, this.y+this.s);
+            ctx.bezierCurveTo(this.x+this.s*1.5, this.y+this.s/2, this.x+this.s, this.y-this.s, this.x, this.y);
+            ctx.fill();
         }
+    }
 
-        // タップ時の処理
-        function addHeart(e) {
-            loveCount++;
-            // カウントを6桁表示
-            countDisplay.innerText = String(loveCount).padStart(6, '0');
-            
-            // パネルを表示
-            compliment.style.display = 'block';
+    function tap(e) {
+        loveCount++;
+        updateDisplay();
+        try { localStorage.setItem('yuri_count', loveCount); } catch(e) {}
 
-            // ハート生成
-            const x = e.clientX || e.touches[0].clientX;
-            const y = e.clientY || e.touches[0].clientY;
-            for(let i=0; i<5; i++) {
-                elements.push(new Heart(x, y));
-            }
+        const x = e.clientX || (e.touches && e.touches[0].clientX);
+        const y = e.clientY || (e.touches && e.touches[0].clientY);
+        for(let i=0; i<5; i++) hearts.push(new Heart(x, y));
+    }
+
+    // 画面全体をタップ可能に
+    window.addEventListener('mousedown', tap);
+    window.addEventListener('touchstart', (e) => { tap(e); e.preventDefault(); }, {passive: false});
+
+    function anim() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        for(let i=hearts.length-1; i>=0; i--) {
+            let h = hearts[i];
+            h.x += h.vx; h.y += h.vy; h.vy += 0.5; h.o -= 0.02;
+            h.draw();
+            if(h.o <= 0) hearts.splice(i, 1);
         }
+        requestAnimationFrame(anim);
+    }
+    anim();
+</script>
 
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            for(let i = elements.length - 1; i >= 0; i--) {
-                elements[i].update();
-                elements[i].draw();
-                if(elements[i].opacity <= 0) elements.splice(i, 1);
-            }
-            requestAnimationFrame(animate);
-        }
-
-        // スマホのタッチ開始でも動作
-        document.getElementById('frame').addEventListener('touchstart', (e) => {
-            addHeart(e.touches[0]);
-        }, {passive: false});
-
-        window.addEventListener('resize', init);
-        init();
-        animate();
-    </script>
 </body>
 </html>
