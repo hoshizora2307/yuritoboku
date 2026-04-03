@@ -3,128 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>YURI_STABLE_LOG_v3.0</title>
+    <title>YURI_OVERRIDE_SYSTEM_v4.0</title>
     <style>
+        :root {
+            --neon-pink: #ff007f;
+            --matrix-green: #00ff41;
+            --cyber-cyan: #00f2ff;
+        }
+
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background-color: #000;
-            font-family: "Hiragino Maru Gothic ProN", sans-serif;
+            font-family: 'Hiragino Maru Gothic ProN', sans-serif;
+            cursor: crosshair;
         }
-        canvas { position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
-        
-        /* ステータス表示 */
-        #hud {
-            position: absolute; top: 20px; left: 20px; z-index: 100;
-            color: #00f2ff; font-size: 12px; background: rgba(0,0,0,0.7);
-            padding: 10px; border-left: 3px solid #ff85a1;
-        }
-        #count-num { font-size: 30px; color: #fff; display: block; font-family: monospace; }
 
-        /* メイン写真 */
-        #center-ui {
+        canvas { position: absolute; top: 0; left: 0; z-index: 1; }
+
+        /* HUD - カウンター & ステータス */
+        #hud-top {
+            position: absolute; top: 10px; left: 10px; z-index: 100;
+            color: var(--matrix-green); font-family: monospace; font-size: 10px;
+            background: rgba(0,0,0,0.8); padding: 10px; border: 1px solid var(--matrix-green);
+            pointer-events: none;
+        }
+        #count-num { font-size: 32px; color: #fff; text-shadow: 0 0 15px var(--neon-pink); }
+
+        /* メインビジュアル - 激しいグリッチ */
+        #frame-container {
             position: absolute; top: 45%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 85vw; max-width: 350px; aspect-ratio: 3/4;
-            z-index: 10; border: 4px solid #fff;
-            box-shadow: 0 0 20px rgba(255,133,161,0.5);
-            background: #222; overflow: hidden;
+            width: 85vw; max-width: 360px; aspect-ratio: 3/4;
+            z-index: 10; border: 2px solid var(--neon-pink);
+            overflow: hidden; box-shadow: 0 0 40px rgba(255, 0, 127, 0.4);
+            animation: shake 0.1s infinite;
         }
-        #center-ui img { width: 100%; height: 100%; object-fit: cover; }
+        #frame-container img {
+            width: 100%; height: 100%; object-fit: cover;
+            filter: contrast(1.4) brightness(1.2) sepia(0.2);
+            animation: glitch-img 0.2s infinite;
+        }
 
-        /* メッセージ */
-        #msg {
-            position: absolute; bottom: 40px; width: 100%;
-            text-align: center; z-index: 30; color: #fff;
-            font-weight: bold; font-size: 1.5rem; line-height: 1.5;
-            text-shadow: 2px 2px 10px #ff3e6c;
+        /* 賛辞テキスト - 読みやすく、かつ「狂気」を感じるデザイン */
+        #message-overlay {
+            position: absolute; bottom: 30px; width: 100%;
+            z-index: 50; text-align: center; pointer-events: none;
         }
+        .text-line {
+            display: inline-block; background: #000; color: #fff;
+            font-size: 7vw; font-weight: 900; padding: 5px 15px;
+            margin-bottom: 5px; border: 1px solid var(--neon-pink);
+            box-shadow: 5px 5px 0 var(--neon-pink);
+            text-shadow: 2px 2px 0 var(--cyber-blue);
+        }
+
+        /* 署名 */
+        #sig {
+            position: absolute; bottom: 10px; right: 10px; z-index: 100;
+            color: rgba(255,255,255,0.3); font-size: 9px; letter-spacing: 3px;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-51%, -49%) rotate(0.5deg); }
+            75% { transform: translate(-49%, -51%) rotate(-0.5deg); }
+        }
+        @keyframes glitch-img {
+            0% { clip-path: inset(0 0 0 0); transform: scale(1); }
+            20% { clip-path: inset(10% 0 50% 0); transform: scale(1.1) translateX(-5px); }
+            40% { clip-path: inset(80% 0 5% 0); transform: scale(1.05) translateX(5px); }
+            100% { clip-path: inset(0 0 0 0); }
+        }
+
+        @media (min-width: 768px) { .text-line { font-size: 2.2rem; } }
     </style>
 </head>
 <body>
 
-<div id="hud">
-    DATA_STORAGE: ACTIVE
-    <span id="count-num">000000</span>
+<div id="hud-top">
+    [SYSTEM_CORE: DAICHI]<br>
+    [DATABASE: ETERNAL_LOG]<br>
+    [STATUS: OVERLOADED]<br>
+    COUNT: <span id="count-num">000000</span>
 </div>
 
-<div id="center-ui" id="photo-frame">
-    <img src="yuri_photo.jpg" alt="Yuri" onerror="this.style.display='none'; alert('画像(yuri_photo.jpg)が見つかりません！')">
+<div id="frame-container">
+    <img src="yuri_photo.jpg" alt="Critical_Target">
 </div>
 
-<div id="msg">
-    この5年でみた女性の中で<br>
-    一番かわいい。ッ！！！
+<div id="message-overlay">
+    <div class="text-line">この5年でみた女性の中で</div><br>
+    <div class="text-line" style="color: var(--neon-pink);">一番かわいい。ッ！！！</div>
 </div>
+
+<div id="sig">DEVELOPED_BY_ONODA_RESEARCH_LAB</div>
 
 <canvas id="canvas"></canvas>
 
 <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const countEl = document.getElementById('count-num');
+    const countDisplay = document.getElementById('count-num');
+    
+    // --- 永続化ストレージ (堅牢版) ---
     let loveCount = 0;
-
-    // --- 安全なストレージ機能 ---
     try {
-        loveCount = parseInt(localStorage.getItem('yuri_count')) || 0;
-    } catch(e) {
-        console.log("Storage access denied");
+        const saved = localStorage.getItem('yuri_eternal_v4');
+        if(saved) loveCount = parseInt(saved);
+    } catch(e) {}
+    
+    function updateHUD() {
+        countDisplay.innerText = String(loveCount).padStart(6, '0');
+        try { localStorage.setItem('yuri_eternal_v4', loveCount); } catch(e) {}
     }
-    updateDisplay();
+    updateHUD();
 
-    function updateDisplay() {
-        countEl.innerText = String(loveCount).padStart(6, '0');
-    }
+    // --- エフェクト処理 ---
+    let objects = [];
+    const matrixChars = "01桜愛YURI幸福DAICHI∞Σπ";
 
-    // --- エフェクト ---
-    let hearts = [];
-    class Heart {
+    class DigitalHeart {
         constructor(x, y) {
             this.x = x; this.y = y;
-            this.s = Math.random() * 20 + 15;
-            this.vx = (Math.random() - 0.5) * 10;
-            this.vy = -Math.random() * 15 - 5;
-            this.o = 1;
+            this.size = Math.random() * 30 + 20;
+            this.vX = (Math.random() - 0.5) * 15;
+            this.vY = -Math.random() * 20 - 5;
+            this.opacity = 1;
+            this.life = 1;
         }
         draw() {
-            ctx.globalAlpha = this.o;
-            ctx.fillStyle = '#ff3e6c';
+            ctx.save();
+            ctx.globalAlpha = this.life;
+            ctx.fillStyle = '#ff007f';
+            ctx.shadowBlur = 15; ctx.shadowColor = '#ff007f';
             ctx.beginPath();
-            ctx.moveTo(this.x, this.y);
-            ctx.bezierCurveTo(this.x-this.s, this.y-this.s, this.x-this.s*1.5, this.y+this.s/2, this.x, this.y+this.s);
-            ctx.bezierCurveTo(this.x+this.s*1.5, this.y+this.s/2, this.x+this.s, this.y-this.s, this.x, this.y);
+            const x = this.x; const y = this.y; const s = this.size;
+            ctx.moveTo(x, y);
+            ctx.bezierCurveTo(x-s, y-s, x-s*1.5, y+s/2, x, y+s);
+            ctx.bezierCurveTo(x+s*1.5, y+s/2, x+s, y-s, x, y);
             ctx.fill();
+            ctx.restore();
         }
     }
 
-    function tap(e) {
-        loveCount++;
-        updateDisplay();
-        try { localStorage.setItem('yuri_count', loveCount); } catch(e) {}
+    class CodeRain {
+        constructor() { this.reset(); }
+        reset() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * -canvas.height;
+            this.v = Math.random() * 5 + 5;
+            this.char = matrixChars[Math.floor(Math.random()*matrixChars.length)];
+        }
+        draw() {
+            ctx.fillStyle = "rgba(0, 255, 65, 0.3)";
+            ctx.font = "12px monospace";
+            ctx.fillText(this.char, this.x, this.y);
+        }
+    }
 
+    let rain = Array.from({length: 50}, () => new CodeRain());
+
+    function handleInteraction(e) {
+        if(e.type === 'touchstart') e.preventDefault();
+        loveCount++;
+        updateHUD();
+        
         const x = e.clientX || (e.touches && e.touches[0].clientX);
         const y = e.clientY || (e.touches && e.touches[0].clientY);
-        for(let i=0; i<5; i++) hearts.push(new Heart(x, y));
+        
+        for(let i=0; i<8; i++) objects.push(new DigitalHeart(x, y));
     }
 
-    // 画面全体をタップ可能に
-    window.addEventListener('mousedown', tap);
-    window.addEventListener('touchstart', (e) => { tap(e); e.preventDefault(); }, {passive: false});
+    window.addEventListener('mousedown', handleInteraction);
+    window.addEventListener('touchstart', handleInteraction, {passive: false});
 
-    function anim() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function loop() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        for(let i=hearts.length-1; i>=0; i--) {
-            let h = hearts[i];
-            h.x += h.vx; h.y += h.vy; h.vy += 0.5; h.o -= 0.02;
-            h.draw();
-            if(h.o <= 0) hearts.splice(i, 1);
-        }
-        requestAnimationFrame(anim);
-    }
-    anim();
-</script>
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.fillRect(0,0,canvas.width, canvas.height);
 
+        rain.forEach(r => {
+            r.y += r.v;
+            if(r.y > canvas.height) r.reset();
+            r.draw();
+        });
+
+        for(let i = objects.length-1; i>=0; i--) {
+            let o = objects[i];
+            o.x += o.vX; o.y += o.vY; o.vY += 0.8; o.life -= 0.02;
+            o.draw();
+            if(o.life <= 0) objects.splice(i, 1);
+        }
+        requestAnimationFrame(loop);
+    }
+    loop();
+</script>
 </body>
 </html>
