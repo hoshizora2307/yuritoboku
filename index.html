@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TERMINAL_YURI_SYSTEM</title>
+    <title>TERMINAL_YURI_OVERLOAD_v9.9</title>
     <style>
         :root {
             --hacker-green: #00ff41;
             --sakura-pink: #ff85a1;
             --cyber-blue: #00f2ff;
+            --warning-red: #ff0000;
         }
 
         body, html {
             margin: 0; padding: 0;
             width: 100%; height: 100%;
             overflow: hidden;
-            background-color: #050505;
+            background-color: #000;
             font-family: 'Courier New', Courier, monospace;
-            color: var(--hacker-green);
+            color: #fff;
         }
 
         canvas {
@@ -26,193 +27,228 @@
             z-index: 1;
         }
 
-        /* センターユニット（写真） */
+        /* 画面全体のストロボ・フラッシュ演出 */
+        #strobe-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: white;
+            opacity: 0;
+            z-index: 50;
+            pointer-events: none;
+            animation: strobe 0.15s infinite;
+            display: none; /* 初期状態は非表示、タップで暴走 */
+        }
+
+        /* センターユニット（写真）: 激しいブレと色収差 */
         #frame {
             position: absolute;
             top: 45%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 75vw;
-            max-width: 350px;
+            width: 80vw;
+            max-width: 380px;
             aspect-ratio: 3/4;
             z-index: 10;
-            border: 2px solid var(--sakura-pink);
-            box-shadow: 0 0 20px var(--sakura-pink), inset 0 0 10px var(--sakura-pink);
+            border: 4px solid var(--hacker-green);
             background: #000;
             overflow: hidden;
             cursor: crosshair;
+            animation: glitch-frame 0.2s infinite, border-pulse 0.5s infinite;
         }
 
         #frame img {
             width: 100%; height: 100%;
             object-fit: cover;
-            filter: contrast(1.1) brightness(0.9);
-            opacity: 0.85;
-            transition: opacity 0.3s;
+            filter: contrast(1.3) brightness(1.1) saturate(1.2);
+            opacity: 0.9;
+            animation: glitch-img 0.1s infinite;
         }
 
-        #frame:active img { opacity: 1; }
-
-        /* スキャンライン等のHUD演出 */
+        /* スキャンライン・ノイズ HUD */
         #frame::after {
             content: "";
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 2px, 3px 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.1), rgba(0, 255, 0, 0.05), rgba(0, 0, 255, 0.1));
+            background-size: 100% 4px, 6px 100%;
             pointer-events: none;
         }
 
-        /* テキスト表示 */
-        #info-panel {
+        /* 賛辞テキスト（日本語・グリッチ） */
+        #compliment-panel {
             position: absolute;
-            bottom: 30px; left: 20px;
-            z-index: 20;
-            font-size: 12px;
+            bottom: 50px; left: 0; width: 100%;
+            z-index: 30;
+            text-align: center;
+            font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+            font-weight: 900;
+            font-size: 6vw; /* スマホ向けサイズ */
+            line-height: 1.3;
             text-transform: uppercase;
-            line-height: 1.5;
-            text-shadow: 0 0 5px var(--hacker-green);
+            color: #fff;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px 0;
+            border-top: 2px solid var(--warning-red);
+            border-bottom: 2px solid var(--warning-red);
+            animation: text-flicker 0.05s infinite;
+            display: none; /* タップで表示 */
         }
 
-        .glitch {
-            font-weight: bold;
-            font-size: 24px;
-            color: var(--sakura-pink);
-            text-shadow: 2px 0 var(--cyber-blue), -2px 0 #fff;
-            margin-bottom: 5px;
+        .compliment-main {
+            color: var(--warning-red);
+            text-shadow: 0 0 10px var(--warning-red), 3px 0 var(--cyber-blue), -3px 0 var(--sakura-pink);
         }
 
+        /* シグネチャー */
         #signature {
             position: absolute;
             top: 20px; right: 20px;
             z-index: 20;
-            font-size: 14px;
+            font-size: 12px;
             letter-spacing: 2px;
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* アニメーション定義 */
+        @keyframes strobe {
+            0% { opacity: 0; }
+            50% { opacity: 0.1; } /* 眩しすぎない程度に抑えたフラッシュ */
+            100% { opacity: 0; }
+        }
+
+        @keyframes glitch-frame {
+            0% { transform: translate(-50%, -50%) translate(0, 0); }
+            20% { transform: translate(-50%, -50%) translate(-5px, 5px); }
+            40% { transform: translate(-50%, -50%) translate(5px, -5px); }
+            60% { transform: translate(-50%, -50%) translate(-5px, -5px); }
+            80% { transform: translate(-50%, -50%) translate(5px, 5px); }
+            100% { transform: translate(-50%, -50%) translate(0, 0); }
+        }
+
+        @keyframes glitch-img {
+            0% { filter: contrast(1.3) brightness(1.1) saturate(1.2) hue-rotate(0deg); }
+            50% { filter: contrast(1.5) brightness(1.3) saturate(1.5) hue-rotate(10deg); }
+            100% { filter: contrast(1.3) brightness(1.1) saturate(1.2) hue-rotate(0deg); }
+        }
+
+        @keyframes border-pulse {
+            0% { border-color: var(--hacker-green); box-shadow: 0 0 10px var(--hacker-green); }
+            50% { border-color: var(--warning-red); box-shadow: 0 0 30px var(--warning-red); }
+            100% { border-color: var(--hacker-green); box-shadow: 0 0 10px var(--hacker-green); }
+        }
+
+        @keyframes text-flicker {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.02); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* レスポンシブ調整（PC） */
+        @media (min-width: 768px) {
+            #compliment-panel { font-size: 2.5rem; }
         }
     </style>
 </head>
 <body>
 
+    <div id="strobe-overlay"></div>
     <canvas id="canvas"></canvas>
 
-    <div id="signature">PRODUCED BY DAICHI</div>
+    <div id="signature">CORE_SYSTEM_BY_DAICHI</div>
 
     <div id="frame">
-        <img src="yuri_photo.jpg" alt="Target: Yuri">
+        <img src="yuri_photo.jpg" alt="Critical_Asset: Yuri">
     </div>
 
-    <div id="info-panel">
-        <div class="glitch">ENCRYPTED_LOVE_v1.0</div>
-        <div>STATUS: CONNECTED TO YURI</div>
-        <div>LOCATION: NAGANO_NODE_01</div>
-        <div>ENCRYPTION: AES-256_HEART</div>
-        <div id="coords">COORD: X:0, Y:0</div>
+    <div id="compliment-panel">
+        <div>CRITICAL_LOVE_DETECTION</div>
+        <div class="compliment-main">この5年でみた女性の中で</div>
+        <div class="compliment-main">一番かわいい。ッ！！！</div>
     </div>
 
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const frame = document.getElementById('frame');
-        const coords = document.getElementById('coords');
+        const strobe = document.getElementById('strobe-overlay');
+        const compliment = document.getElementById('compliment-panel');
 
-        let particles = [];
-        const chars = "010101桜愛YURI幸福DAICHI∞Σπ";
+        const chars = "010101桜愛YURI幸福DAICHI∞ΣπWARNINGERROR";
         
         function init() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         }
 
-        // デジタルな雨（マトリックス風）
-        class Drop {
+        // バイナリ・グリッチ雨
+        class GlitchDrop {
             constructor() {
                 this.reset();
             }
             reset() {
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * -canvas.height;
-                this.speed = Math.random() * 5 + 2;
-                this.fontSize = Math.random() * 12 + 8;
+                this.speed = Math.random() * 8 + 3;
+                this.fontSize = Math.random() * 14 + 10;
                 this.char = chars[Math.floor(Math.random() * chars.length)];
+                this.color = Math.random() > 0.9 ? "rgba(255, 0, 0, 0.6)" : "rgba(255, 133, 161, 0.3)";
             }
             draw() {
-                ctx.fillStyle = "rgba(255, 133, 161, 0.3)"; // さくら色マトリックス
+                ctx.fillStyle = this.color;
                 ctx.font = this.fontSize + "px monospace";
                 ctx.fillText(this.char, this.x, this.y);
             }
             update() {
                 this.y += this.speed;
                 if (this.y > canvas.height) this.reset();
-                if (Math.random() > 0.98) this.char = chars[Math.floor(Math.random() * chars.length)];
-            }
-        }
-
-        // 数学的タップエフェクト
-        class MathRipple {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.r = 1;
-                this.opacity = 1;
-            }
-            draw() {
-                ctx.strokeStyle = `rgba(0, 242, 255, ${this.opacity})`;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-                ctx.stroke();
-                
-                // 幾何学ライン
-                ctx.beginPath();
-                ctx.moveTo(this.x - this.r, this.y);
-                ctx.lineTo(this.x + this.r, this.y);
-                ctx.moveTo(this.x, this.y - this.r);
-                ctx.lineTo(this.x, this.y + this.r);
-                ctx.stroke();
-            }
-            update() {
-                this.r += 4;
-                this.opacity -= 0.02;
+                if (Math.random() > 0.95) this.char = chars[Math.floor(Math.random() * chars.length)];
             }
         }
 
         let drops = [];
-        let ripples = [];
+        let isOverload = false; // 暴走モードフラグ
 
         function setup() {
-            for(let i = 0; i < 60; i++) drops.push(new Drop());
+            for(let i = 0; i < 80; i++) drops.push(new GlitchDrop());
         }
 
         function animate() {
-            ctx.fillStyle = "rgba(5, 5, 5, 0.15)";
+            // 背景（フェード）
+            ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             drops.forEach(d => { d.update(); d.draw(); });
-            
-            for(let i = ripples.length-1; i>=0; i--) {
-                ripples[i].update();
-                ripples[i].draw();
-                if(ripples[i].opacity <= 0) ripples.splice(i, 1);
+
+            // 暴走モード中のランダムな画面ブレ
+            if(isOverload && Math.random() > 0.8) {
+                ctx.fillStyle = "rgba(255, 0, 0, 0.1)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
 
             requestAnimationFrame(animate);
         }
 
-        // インタラクション
-        frame.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            createEffect(touch.clientX, touch.clientY);
-        });
+        // --- インタラクション：画面をタップで「システム暴走」 ---
+        function triggerOverload(e) {
+            e.preventDefault();
+            if(isOverload) return; // 既に暴走中なら何もしない
 
-        frame.addEventListener('mousedown', (e) => {
-            createEffect(e.clientX, e.clientY);
-        });
+            isOverload = true;
+            strobe.style.display = 'block'; // フラッシュ開始
+            compliment.style.display = 'block'; // 賛辞表示
 
-        function createEffect(x, y) {
-            ripples.push(new MathRipple(x, y));
-            coords.innerText = `COORD: X:${Math.floor(x)}, Y:${Math.floor(y)}`;
+            // 写真の枠線を赤く固定
+            frame.style.borderColor = 'var(--warning-red)';
+            frame.style.boxShadow = '0 0 40px var(--warning-red)';
+            frame.style.animation = 'glitch-frame 0.1s infinite'; // ブレを速く
+
+            // マトリックスの色を赤く
+            drops.forEach(d => d.color = "rgba(255, 0, 0, 0.7)");
         }
+
+        // スマホとPC両方のタップ・クリックイベントに対応
+        window.addEventListener('touchstart', triggerOverload, { passive: false });
+        window.addEventListener('mousedown', triggerOverload);
 
         window.addEventListener('resize', init);
         init();
