@@ -3,140 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>YURI_OVERRIDE_SYSTEM_v4.0</title>
+    <title>YURI_MULTIMODAL_SYSTEM_v5.1</title>
     <style>
         :root {
             --neon-pink: #ff007f;
             --matrix-green: #00ff41;
-            --cyber-cyan: #00f2ff;
+            --cyber-blue: #00f2ff;
         }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background-color: #000;
-            font-family: 'Hiragino Maru Gothic ProN', sans-serif;
-            cursor: crosshair;
+            font-family: 'Hiragino Maru Gothic ProN',sans-serif;
+            color: #fff; cursor: crosshair;
         }
 
-        canvas { position: absolute; top: 0; left: 0; z-index: 1; }
+        canvas { position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
 
-        /* HUD - カウンター & ステータス */
-        #hud-top {
+        /* --- HUD (Left Top) --- */
+        #hud-monitor {
             position: absolute; top: 10px; left: 10px; z-index: 100;
             color: var(--matrix-green); font-family: monospace; font-size: 10px;
-            background: rgba(0,0,0,0.8); padding: 10px; border: 1px solid var(--matrix-green);
-            pointer-events: none;
+            background: rgba(0,0,0,0.85); padding: 10px; border: 1px solid var(--matrix-green);
+            pointer-events: none; text-transform: uppercase;
         }
-        #count-num { font-size: 32px; color: #fff; text-shadow: 0 0 15px var(--neon-pink); }
+        #hud-monitor .stat-row { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 2px; }
+        #count-display { font-size: 32px; color: #fff; text-shadow: 0 0 15px var(--neon-pink); margin-top: 5px; display: block; }
 
-        /* メインビジュアル - 激しいグリッチ */
-        #frame-container {
-            position: absolute; top: 45%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 85vw; max-width: 360px; aspect-ratio: 3/4;
-            z-index: 10; border: 2px solid var(--neon-pink);
-            overflow: hidden; box-shadow: 0 0 40px rgba(255, 0, 127, 0.4);
-            animation: shake 0.1s infinite;
+        /* --- 解析メインユニット (Top Center) --- */
+        #data-analysis-unit {
+            position: absolute; top: 10px; left: 50%;
+            transform: translateX(-50%);
+            width: 80vw; max-width: 320px;
+            z-index: 80;
+            border: 2px solid #fff;
+            background-color: #050505;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+            display: flex; flex-direction: column;
         }
-        #frame-container img {
+
+        #dataset-header {
+            padding: 5px; background-color: #111; color: #aaa;
+            font-family: monospace; font-size: 9px; text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        #image-viewport {
+            width: 100%; aspect-ratio: 4/5;
+            position: relative;
+            animation: initial-glitch 0.3s ease-out;
+        }
+
+        #image-viewport img {
             width: 100%; height: 100%; object-fit: cover;
-            filter: contrast(1.4) brightness(1.2) sepia(0.2);
-            animation: glitch-img 0.2s infinite;
+            position: absolute; top: 0; left: 0;
+            opacity: 0;
+            transition: opacity 0.1s ease-in-out;
+            filter: contrast(1.1);
         }
 
-        /* 賛辞テキスト - 読みやすく、かつ「狂気」を感じるデザイン */
-        #message-overlay {
+        /* 擬似グリッチ・オーバーレイ */
+        #viewport-noise {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3%3C/filter%3%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3%3C/svg%3%3E");
+            opacity: 0.15; pointer-events: none; mix-blend-mode: color-dodge;
+        }
+
+        /* HUD & メッセージ (Bottom) */
+        #message-area {
             position: absolute; bottom: 30px; width: 100%;
             z-index: 50; text-align: center; pointer-events: none;
         }
-        .text-line {
+        .text-panel {
             display: inline-block; background: #000; color: #fff;
-            font-size: 7vw; font-weight: 900; padding: 5px 15px;
-            margin-bottom: 5px; border: 1px solid var(--neon-pink);
+            font-size: 6.5vw; font-weight: 900; padding: 6px 16px;
+            margin-bottom: 6px; border: 1px solid var(--neon-pink);
             box-shadow: 5px 5px 0 var(--neon-pink);
-            text-shadow: 2px 2px 0 var(--cyber-blue);
+            text-shadow: 0 0 8px var(--neon-pink);
         }
 
-        /* 署名 */
+        /* シグネチャー */
         #sig {
-            position: absolute; bottom: 10px; right: 10px; z-index: 100;
-            color: rgba(255,255,255,0.3); font-size: 9px; letter-spacing: 3px;
+            position: absolute; bottom: 5px; right: 10px; z-index: 100;
+            color: rgba(255,255,255,0.3); font-size: 9px; letter-spacing: 2px;
+            font-family: monospace;
         }
 
-        /* Animations */
-        @keyframes shake {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            25% { transform: translate(-51%, -49%) rotate(0.5deg); }
-            75% { transform: translate(-49%, -51%) rotate(-0.5deg); }
+        /*Animations*/
+        @keyframes initial-glitch {
+            0% { transform: scale(1) skew(0); }
+            5% { transform: scale(1.1) skew(10deg); filter: hue-rotate(90deg); }
+            10% { transform: scale(1) skew(-5deg); filter: hue-rotate(0deg); }
+            100% { transform: scale(1) skew(0); }
         }
-        @keyframes glitch-img {
-            0% { clip-path: inset(0 0 0 0); transform: scale(1); }
-            20% { clip-path: inset(10% 0 50% 0); transform: scale(1.1) translateX(-5px); }
-            40% { clip-path: inset(80% 0 5% 0); transform: scale(1.05) translateX(5px); }
-            100% { clip-path: inset(0 0 0 0); }
-        }
-
-        @media (min-width: 768px) { .text-line { font-size: 2.2rem; } }
+        @media (min-width: 768px) { .text-panel { font-size: 2.2rem; } }
     </style>
 </head>
 <body>
 
-<div id="hud-top">
-    [SYSTEM_CORE: DAICHI]<br>
-    [DATABASE: ETERNAL_LOG]<br>
-    [STATUS: OVERLOADED]<br>
-    COUNT: <span id="count-num">000000</span>
+<div id="hud-monitor">
+    <div class="stat-row"><span>SYS_CORE:</span><span>DAICHI_v5.1</span></div>
+    <div class="stat-row"><span>STATUS:</span><span style="color:var(--neon-pink)">OVERLOAD</span></div>
+    <div class="stat-row"><span>ACTIVE_DATASETS:</span><span id="ds-current">01-04</span></div>
+    DATA_TOTAL_LOGGING
+    <span id="count-display">000000</span>
 </div>
 
-<div id="frame-container">
-    <img src="yuri_photo.jpg" alt="Critical_Target">
+<div id="data-analysis-unit" onclick="forceNextDataset(event)" ontouchstart="forceNextDataset(event)">
+    <div id="dataset-header">[ANALYSIS_IN_PROGRESS...] <span id="ds-file-label">yuri_dataset_01.dat</span></div>
+    <div id="image-viewport">
+        <img id="img-01" src="yuri_photo.jpg" alt="Dataset_01">
+        <img id="img-02" src="yuri_hacker_01.jpg" alt="Dataset_02">
+        <img id="img-03" src="yuri_hacker_02.jpg" alt="Dataset_03">
+        <img id="img-04" src="yuri_hacker_03.jpg" alt="Dataset_04">
+        <div id="viewport-noise"></div>
+    </div>
 </div>
 
-<div id="message-overlay">
-    <div class="text-line">この5年でみた女性の中で</div><br>
-    <div class="text-line" style="color: var(--neon-pink);">一番かわいい。ッ！！！</div>
+<div id="message-area">
+    <div class="text-panel">この5年でみた女性の中で</div><br>
+    <div class="text-panel" style="color:var(--neon-pink);">一番かわいい。ッ！！！</div>
 </div>
 
-<div id="sig">DEVELOPED_BY_ONODA_RESEARCH_LAB</div>
+<div id="sig">ARCHITECTED_BY_DAICHI_NAGANO_NODE</div>
 
 <canvas id="canvas"></canvas>
 
 <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const countDisplay = document.getElementById('count-num');
+    const countDisplay = document.getElementById('count-display');
+    const viewportNoise = document.getElementById('viewport-noise');
+    const images = document.querySelectorAll('#image-viewport img');
+    const dsLabel = document.getElementById('ds-file-label');
+    const dsCurrent = document.getElementById('ds-current');
     
-    // --- 永続化ストレージ (堅牢版) ---
+    // --- 永続化ストレージ ---
     let loveCount = 0;
     try {
-        const saved = localStorage.getItem('yuri_eternal_v4');
+        const saved = localStorage.getItem('yuri_love_multimodal_v5');
         if(saved) loveCount = parseInt(saved);
     } catch(e) {}
     
     function updateHUD() {
         countDisplay.innerText = String(loveCount).padStart(6, '0');
-        try { localStorage.setItem('yuri_eternal_v4', loveCount); } catch(e) {}
+        try { localStorage.setItem('yuri_love_multimodal_v5', loveCount); } catch(e) {}
     }
     updateHUD();
 
-    // --- エフェクト処理 ---
-    let objects = [];
-    const matrixChars = "01桜愛YURI幸福DAICHI∞Σπ";
+    // --- 解析ユニットのロジック ---
+    let currentImgIndex = 0;
+    let analysisInterval;
 
+    function nextDataset() {
+        images[currentImgIndex].style.opacity = 0; // 現在のを非表示
+        currentImgIndex = (currentImgIndex + 1) % images.length;
+        images[currentImgIndex].style.opacity = 1; // 次のを表示
+
+        // HUD更新
+        const dsIndex = (currentImgIndex + 1).toString().padStart(2, '0');
+        dsLabel.innerText = `yuri_dataset_${dsIndex}.dat`;
+        dsCurrent.innerText = `${dsIndex}-04`;
+
+        // 瞬間的なグリッチ演出
+        triggerGlitch();
+    }
+
+    // タップによる強制切り替え
+    function forceNextDataset(e) {
+        if(e.type === 'touchstart') e.preventDefault();
+        clearInterval(analysisInterval); // 自動ループをリセット
+        nextDataset();
+        // エフェクト生成（写真の中心から）
+        const rect = e.currentTarget.getBoundingClientRect();
+        createTapEffect(rect.left + rect.width/2, rect.top + rect.height/2);
+        
+        loveCount++;
+        updateHUD();
+        startAutoAnalysis(); // 自動ループを再開
+    }
+
+    function triggerGlitch() {
+        viewportNoise.style.opacity = 0.5;
+        setTimeout(() => { viewportNoise.style.opacity = 0.15; }, 50);
+    }
+
+    // 初回表示と自動ループ開始
+    images[0].style.opacity = 1;
+    function startAutoAnalysis() {
+        analysisInterval = setInterval(nextDataset, 4000); // 4秒ごとに自動切り替え
+    }
+    startAutoAnalysis();
+
+    // --- タップエフェクト (Digital Hearts) ---
+    let objects = [];
+    
     class DigitalHeart {
         constructor(x, y) {
             this.x = x; this.y = y;
-            this.size = Math.random() * 30 + 20;
-            this.vX = (Math.random() - 0.5) * 15;
-            this.vY = -Math.random() * 20 - 5;
-            this.opacity = 1;
+            this.size = Math.random() * 25 + 15;
+            this.vX = (Math.random() - 0.5) * 20; // 飛散を速く
+            this.vY = -Math.random() * 25 - 5;
             this.life = 1;
+            this.gravity = 0.8;
+            this.color = Math.random() > 0.3 ? '#ff007f' : '#fff';
         }
         draw() {
             ctx.save();
             ctx.globalAlpha = this.life;
-            ctx.fillStyle = '#ff007f';
-            ctx.shadowBlur = 15; ctx.shadowColor = '#ff007f';
+            ctx.fillStyle = this.color;
+            ctx.shadowBlur = 10; ctx.shadowColor = this.color;
             ctx.beginPath();
             const x = this.x; const y = this.y; const s = this.size;
             ctx.moveTo(x, y);
@@ -147,52 +225,32 @@
         }
     }
 
-    class CodeRain {
-        constructor() { this.reset(); }
-        reset() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * -canvas.height;
-            this.v = Math.random() * 5 + 5;
-            this.char = matrixChars[Math.floor(Math.random()*matrixChars.length)];
-        }
-        draw() {
-            ctx.fillStyle = "rgba(0, 255, 65, 0.3)";
-            ctx.font = "12px monospace";
-            ctx.fillText(this.char, this.x, this.y);
-        }
+    function createTapEffect(x, y) {
+        for(let i=0; i<10; i++) objects.push(new DigitalHeart(x, y));
     }
 
-    let rain = Array.from({length: 50}, () => new CodeRain());
+    // 背景クリックでもカウンターは動くように
+    window.addEventListener('mousedown', (e) => {
+        if(!document.getElementById('data-analysis-unit').contains(e.target)){
+            loveCount++; updateHUD(); createTapEffect(e.clientX, e.clientY);
+        }
+    });
+    window.addEventListener('touchstart', (e) => {
+        if(!document.getElementById('data-analysis-unit').contains(e.target)){
+             loveCount++; updateHUD(); createTapEffect(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    }, {passive: false});
 
-    function handleInteraction(e) {
-        if(e.type === 'touchstart') e.preventDefault();
-        loveCount++;
-        updateHUD();
-        
-        const x = e.clientX || (e.touches && e.touches[0].clientX);
-        const y = e.clientY || (e.touches && e.touches[0].clientY);
-        
-        for(let i=0; i<8; i++) objects.push(new DigitalHeart(x, y));
-    }
-
-    window.addEventListener('mousedown', handleInteraction);
-    window.addEventListener('touchstart', handleInteraction, {passive: false});
-
+    // --- メインループ ---
     function loop() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.fillStyle = "rgba(0,0,0,0.15)"; // 残像感を強く
         ctx.fillRect(0,0,canvas.width, canvas.height);
-
-        rain.forEach(r => {
-            r.y += r.v;
-            if(r.y > canvas.height) r.reset();
-            r.draw();
-        });
 
         for(let i = objects.length-1; i>=0; i--) {
             let o = objects[i];
-            o.x += o.vX; o.y += o.vY; o.vY += 0.8; o.life -= 0.02;
+            o.x += o.vX; o.y += o.vY; o.vY += o.gravity; o.life -= 0.02;
             o.draw();
             if(o.life <= 0) objects.splice(i, 1);
         }
