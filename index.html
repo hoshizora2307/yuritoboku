@@ -3,35 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>YURI_MULTIMODAL_SYSTEM_v5.1</title>
+    <title>YURI_OVERRIDE_OVERLOAD_v6.6.6</title>
     <style>
         :root {
             --neon-pink: #ff007f;
             --matrix-green: #00ff41;
-            --cyber-blue: #00f2ff;
+            --cyber-cyan: #00f2ff;
+            --warning-red: #ff0000;
         }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background-color: #000;
-            font-family: 'Hiragino Maru Gothic ProN',sans-serif;
-            color: #fff; cursor: crosshair;
+            font-family: 'Courier New', Courier, monospace;
+            color: var(--matrix-green); cursor: crosshair;
         }
 
-        canvas { position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
+        canvas { position: absolute; top: 0; left: 0; z-index: 1; }
 
-        /* --- HUD (Left Top) --- */
+        /* HUD - マルチモーダル・ステータス */
         #hud-monitor {
             position: absolute; top: 10px; left: 10px; z-index: 100;
-            color: var(--matrix-green); font-family: monospace; font-size: 10px;
-            background: rgba(0,0,0,0.85); padding: 10px; border: 1px solid var(--matrix-green);
+            font-size: 10px; background: rgba(0,0,0,0.8);
+            padding: 10px; border: 1px solid var(--matrix-green);
             pointer-events: none; text-transform: uppercase;
         }
         #hud-monitor .stat-row { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 2px; }
-        #count-display { font-size: 32px; color: #fff; text-shadow: 0 0 15px var(--neon-pink); margin-top: 5px; display: block; }
+        #count-num { font-size: 32px; color: #fff; text-shadow: 0 0 15px var(--neon-pink); }
 
-        /* --- 解析メインユニット (Top Center) --- */
-        #data-analysis-unit {
+        /* 解析メインユニット (タップで切り替え) */
+        #data-unit {
             position: absolute; top: 10px; left: 50%;
             transform: translateX(-50%);
             width: 80vw; max-width: 320px;
@@ -39,12 +40,12 @@
             border: 2px solid #fff;
             background-color: #050505;
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
             overflow: hidden;
             display: flex; flex-direction: column;
+            box-shadow: 0 0 10px #fff;
         }
 
-        #dataset-header {
+        #unit-header {
             padding: 5px; background-color: #111; color: #aaa;
             font-family: monospace; font-size: 9px; text-align: left;
             border-bottom: 1px solid #333;
@@ -53,22 +54,12 @@
         #image-viewport {
             width: 100%; aspect-ratio: 4/5;
             position: relative;
-            animation: initial-glitch 0.3s ease-out;
         }
 
         #image-viewport img {
             width: 100%; height: 100%; object-fit: cover;
             position: absolute; top: 0; left: 0;
-            opacity: 0;
-            transition: opacity 0.1s ease-in-out;
-            filter: contrast(1.1);
-        }
-
-        /* 擬似グリッチ・オーバーレイ */
-        #viewport-noise {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3%3C/filter%3%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3%3C/svg%3%3E");
-            opacity: 0.15; pointer-events: none; mix-blend-mode: color-dodge;
+            opacity: 0; transition: opacity 0.1s;
         }
 
         /* HUD & メッセージ (Bottom) */
@@ -76,55 +67,46 @@
             position: absolute; bottom: 30px; width: 100%;
             z-index: 50; text-align: center; pointer-events: none;
         }
-        .text-panel {
-            display: inline-block; background: #000; color: #fff;
-            font-size: 6.5vw; font-weight: 900; padding: 6px 16px;
-            margin-bottom: 6px; border: 1px solid var(--neon-pink);
-            box-shadow: 5px 5px 0 var(--neon-pink);
-            text-shadow: 0 0 8px var(--neon-pink);
+        .glitch-text {
+            font-size: 7vw; font-weight: 900;
+            color: #fff; text-shadow: 2px 0 var(--cyber-cyan), -2px 0 var(--neon-pink);
+            margin-bottom: 10px;
         }
 
-        /* シグネチャー */
+        /* 署名 */
         #sig {
             position: absolute; bottom: 5px; right: 10px; z-index: 100;
-            color: rgba(255,255,255,0.3); font-size: 9px; letter-spacing: 2px;
+            color: rgba(255,255,255,0.2); font-size: 9px;
             font-family: monospace;
         }
 
-        /*Animations*/
-        @keyframes initial-glitch {
-            0% { transform: scale(1) skew(0); }
-            5% { transform: scale(1.1) skew(10deg); filter: hue-rotate(90deg); }
-            10% { transform: scale(1) skew(-5deg); filter: hue-rotate(0deg); }
-            100% { transform: scale(1) skew(0); }
-        }
-        @media (min-width: 768px) { .text-panel { font-size: 2.2rem; } }
+        /* スマホ向け調整 */
+        @media (min-width: 768px) { .glitch-text { font-size: 2.2rem; } }
     </style>
 </head>
 <body>
 
 <div id="hud-monitor">
-    <div class="stat-row"><span>SYS_CORE:</span><span>DAICHI_v5.1</span></div>
-    <div class="stat-row"><span>STATUS:</span><span style="color:var(--neon-pink)">OVERLOAD</span></div>
-    <div class="stat-row"><span>ACTIVE_DATASETS:</span><span id="ds-current">01-04</span></div>
-    DATA_TOTAL_LOGGING
-    <span id="count-display">000000</span>
+    <div class="stat-row"><span>SYS_CORE:</span><span>DAICHI_v6.6.6</span></div>
+    <div class="stat-row"><span>STATUS:</span><span style="color:var(--warning-red)">CRITICAL_OVERLOAD</span></div>
+    <div class="stat-row"><span>DATASETS:</span><span id="ds-current">01-04</span></div>
+    LOVE_TOTAL
+    <span id="count-num">000000</span>
 </div>
 
-<div id="data-analysis-unit" onclick="forceNextDataset(event)" ontouchstart="forceNextDataset(event)">
-    <div id="dataset-header">[ANALYSIS_IN_PROGRESS...] <span id="ds-file-label">yuri_dataset_01.dat</span></div>
+<div id="data-unit" onclick="forceNextDataset(event)" ontouchstart="forceNextDataset(event)">
+    <div id="unit-header">[ANALYSIS_IN_PROGRESS...] <span id="ds-file-label">yuri_ds_01.dat</span></div>
     <div id="image-viewport">
         <img id="img-01" src="yuri_photo.jpg" alt="Dataset_01">
         <img id="img-02" src="yuri_hacker_01.jpg" alt="Dataset_02">
         <img id="img-03" src="yuri_hacker_02.jpg" alt="Dataset_03">
         <img id="img-04" src="yuri_hacker_03.jpg" alt="Dataset_04">
-        <div id="viewport-noise"></div>
     </div>
 </div>
 
 <div id="message-area">
-    <div class="text-panel">この5年でみた女性の中で</div><br>
-    <div class="text-panel" style="color:var(--neon-pink);">一番かわいい。ッ！！！</div>
+    <div class="glitch-text">この5年でみた女性の中で</div><br>
+    <div class="glitch-text" style="color:var(--neon-pink);">一番かわいい。ッ！！！</div>
 </div>
 
 <div id="sig">ARCHITECTED_BY_DAICHI_NAGANO_NODE</div>
@@ -134,8 +116,7 @@
 <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const countDisplay = document.getElementById('count-display');
-    const viewportNoise = document.getElementById('viewport-noise');
+    const countDisplay = document.getElementById('count-num');
     const images = document.querySelectorAll('#image-viewport img');
     const dsLabel = document.getElementById('ds-file-label');
     const dsCurrent = document.getElementById('ds-current');
@@ -143,116 +124,147 @@
     // --- 永続化ストレージ ---
     let loveCount = 0;
     try {
-        const saved = localStorage.getItem('yuri_love_multimodal_v5');
+        const saved = localStorage.getItem('yuri_love_overload_v6');
         if(saved) loveCount = parseInt(saved);
     } catch(e) {}
     
     function updateHUD() {
         countDisplay.innerText = String(loveCount).padStart(6, '0');
-        try { localStorage.setItem('yuri_love_multimodal_v5', loveCount); } catch(e) {}
+        try { localStorage.setItem('yuri_love_overload_v6', loveCount); } catch(e) {}
     }
     updateHUD();
 
-    // --- 解析ユニットのロジック ---
+    // --- マルチモーダル解析ユニットのロジック ---
     let currentImgIndex = 0;
     let analysisInterval;
 
     function nextDataset() {
-        images[currentImgIndex].style.opacity = 0; // 現在のを非表示
+        images[currentImgIndex].style.opacity = 0;
         currentImgIndex = (currentImgIndex + 1) % images.length;
-        images[currentImgIndex].style.opacity = 1; // 次のを表示
+        images[currentImgIndex].style.opacity = 1;
 
         // HUD更新
         const dsIndex = (currentImgIndex + 1).toString().padStart(2, '0');
-        dsLabel.innerText = `yuri_dataset_${dsIndex}.dat`;
+        dsLabel.innerText = `yuri_ds_${dsIndex}.dat`;
         dsCurrent.innerText = `${dsIndex}-04`;
 
-        // 瞬間的なグリッチ演出
-        triggerGlitch();
+        // 瞬間的なグリッチ（画面が「割れる」予兆）
+        triggerScreenGlitch(0.1);
     }
 
-    // タップによる強制切り替え
     function forceNextDataset(e) {
         if(e.type === 'touchstart') e.preventDefault();
-        clearInterval(analysisInterval); // 自動ループをリセット
+        clearInterval(analysisInterval);
         nextDataset();
-        // エフェクト生成（写真の中心から）
-        const rect = e.currentTarget.getBoundingClientRect();
-        createTapEffect(rect.left + rect.width/2, rect.top + rect.height/2);
-        
-        loveCount++;
-        updateHUD();
-        startAutoAnalysis(); // 自動ループを再開
+        // エフェクト生成（画面中央）
+        handleInteraction(e, true);
+        startAutoAnalysis();
     }
 
-    function triggerGlitch() {
-        viewportNoise.style.opacity = 0.5;
-        setTimeout(() => { viewportNoise.style.opacity = 0.15; }, 50);
-    }
-
-    // 初回表示と自動ループ開始
     images[0].style.opacity = 1;
     function startAutoAnalysis() {
-        analysisInterval = setInterval(nextDataset, 4000); // 4秒ごとに自動切り替え
+        analysisInterval = setInterval(nextDataset, 5000); // 5秒ごとに自動切り替え
     }
     startAutoAnalysis();
 
-    // --- タップエフェクト (Digital Hearts) ---
+    // --- 暴走物理シミュレーション (オーバーロード版) ---
     let objects = [];
-    
-    class DigitalHeart {
-        constructor(x, y) {
+    const matrixChars = "桜愛YURI幸福DAICHI∞Σπ∇√∫ENCRYPTDECRYPTERROR";
+
+    class ChaosParticle {
+        constructor(x, y, type) {
             this.x = x; this.y = y;
-            this.size = Math.random() * 25 + 15;
-            this.vX = (Math.random() - 0.5) * 20; // 飛散を速く
-            this.vY = -Math.random() * 25 - 5;
+            this.size = Math.random() * 20 + 20;
+            this.vX = (Math.random() - 0.5) * 50; // 超高速
+            this.vY = -Math.random() * 50 - 10;
             this.life = 1;
-            this.gravity = 0.8;
-            this.color = Math.random() > 0.3 ? '#ff007f' : '#fff';
+            this.vY_init = this.vY;
+            this.type = type; // 0: ハート, 1: コード, 2: グリッチ破片
+            this.color = type === 0 ? `hsla(${Math.random()*20+340}, 100%, 70%, 1)` : 
+                         (type === 1 ? varColor('--matrix-green') : '#fff');
+            this.char = matrixChars[Math.floor(Math.random()*matrixChars.length)];
         }
         draw() {
             ctx.save();
             ctx.globalAlpha = this.life;
-            ctx.fillStyle = this.color;
-            ctx.shadowBlur = 10; ctx.shadowColor = this.color;
-            ctx.beginPath();
-            const x = this.x; const y = this.y; const s = this.size;
-            ctx.moveTo(x, y);
-            ctx.bezierCurveTo(x-s, y-s, x-s*1.5, y+s/2, x, y+s);
-            ctx.bezierCurveTo(x+s*1.5, y+s/2, x+s, y-s, x, y);
-            ctx.fill();
+            if (this.type === 0) { // ハート
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 30; ctx.shadowColor = this.color;
+                ctx.beginPath();
+                const x = this.x; const y = this.y; const s = this.size;
+                ctx.moveTo(x, y);
+                ctx.bezierCurveTo(x-s, y-s, x-s*1.5, y+s/2, x, y+s);
+                ctx.bezierCurveTo(x+s*1.5, y+s/2, x+s, y-s, x, y);
+                ctx.fill();
+            } else if (this.type === 1) { // コード
+                ctx.fillStyle = this.color;
+                ctx.font = "bold 16px monospace";
+                ctx.fillText(this.char, this.x, this.y);
+            } else { // グリッチ破片（四角形）
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.size*2, this.size);
+            }
             ctx.restore();
         }
-    }
-
-    function createTapEffect(x, y) {
-        for(let i=0; i<10; i++) objects.push(new DigitalHeart(x, y));
-    }
-
-    // 背景クリックでもカウンターは動くように
-    window.addEventListener('mousedown', (e) => {
-        if(!document.getElementById('data-analysis-unit').contains(e.target)){
-            loveCount++; updateHUD(); createTapEffect(e.clientX, e.clientY);
+        update() {
+            this.x += this.vX; this.y += this.vY;
+            this.vY += 2; // 強力な重力
+            this.life -= 0.02;
         }
+    }
+
+    function varColor(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name);
+    }
+
+    function triggerScreenGlitch(power) {
+        // 瞬間的に画面全体をノイズで埋める
+        const canvasW = canvas.width; const canvasH = canvas.height;
+        for(let i=0; i<3; i++) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${Math.random()*power})`;
+            ctx.fillRect(Math.random()*canvasW, Math.random()*canvasH, Math.random()*canvasW, Math.random()*canvasH);
+        }
+    }
+
+    function handleInteraction(e, isAnalysisUnit = false) {
+        if(e.type === 'touchstart') e.preventDefault();
+        loveCount++;
+        updateHUD();
+
+        const x = isAnalysisUnit ? canvas.width / 2 : (e.clientX || (e.touches && e.touches[0].clientX));
+        const y = isAnalysisUnit ? canvas.height / 2 : (e.clientY || (e.touches && e.touches[0].clientY));
+
+        // 瞬間的な画面クラッシュ演出
+        triggerScreenGlitch(0.5);
+
+        // 大量のカオス・パーティクルを生成
+        for(let i=0; i<30; i++) {
+            objects.push(new ChaosParticle(x, y, 0)); // ハート
+            objects.push(new ChaosParticle(x, y, 1)); // コード
+            if(Math.random()>0.8) objects.push(new ChaosParticle(x, y, 2)); // 破片
+        }
+    }
+
+    // 画面全体をタップ可能に
+    window.addEventListener('mousedown', (e) => {
+        if(!document.getElementById('data-unit').contains(e.target)) handleInteraction(e);
     });
     window.addEventListener('touchstart', (e) => {
-        if(!document.getElementById('data-analysis-unit').contains(e.target)){
-             loveCount++; updateHUD(); createTapEffect(e.touches[0].clientX, e.touches[0].clientY);
-        }
+        if(!document.getElementById('data-unit').contains(e.target)) handleInteraction(e.touches[0]);
     }, {passive: false});
 
     // --- メインループ ---
     function loop() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        ctx.fillStyle = "rgba(0,0,0,0.15)"; // 残像感を強く
+        // 背景（フェード）を過剰に速く
+        ctx.fillStyle = "rgba(0,0,0,0.1)"; 
         ctx.fillRect(0,0,canvas.width, canvas.height);
 
         for(let i = objects.length-1; i>=0; i--) {
-            let o = objects[i];
-            o.x += o.vX; o.y += o.vY; o.vY += o.gravity; o.life -= 0.02;
-            o.draw();
-            if(o.life <= 0) objects.splice(i, 1);
+            objects[i].update();
+            objects[i].draw();
+            if(objects[i].life <= 0) objects.splice(i, 1);
         }
         requestAnimationFrame(loop);
     }
