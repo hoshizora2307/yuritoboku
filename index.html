@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Celebration for Yuri</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #fff;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 5rem;
+            margin: 0;
+            text-shadow: 0 0 20px #ff0055, 0 0 30px #ff0055;
+            animation: pulse 2s infinite ease-in-out;
+            letter-spacing: 5px;
+        }
+
+        p {
+            font-size: 1.5rem;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.05); filter: brightness(1.3); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="overlay">
+        <h1>Congratulations!</h1>
+        <p>A Special Journey with Yuri Starts Now</p>
+    </div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let particles = [];
+        let hearts = [];
+
+        function init() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Heart {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + 100;
+                this.size = Math.random() * 20 + 10;
+                this.speed = Math.random() * 3 + 2;
+                this.color = `hsla(${Math.random() * 30 + 330}, 100%, 70%, ${Math.random() * 0.5 + 0.5})`;
+                this.amplitude = Math.random() * 50 + 20;
+                this.frequency = Math.random() * 0.02 + 0.01;
+                this.angle = Math.random() * Math.PI * 2;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                const x = this.x + Math.sin(this.angle) * this.amplitude;
+                ctx.moveTo(x, this.y);
+                ctx.bezierCurveTo(x - this.size / 2, this.y - this.size / 2, x - this.size, this.y + this.size / 3, x, this.y + this.size);
+                ctx.bezierCurveTo(x + this.size, this.y + this.size / 3, x + this.size / 2, this.y - this.size / 2, x, this.y);
+                ctx.fill();
+            }
+            update() {
+                this.y -= this.speed;
+                this.angle += this.frequency;
+                if (this.y < -50) this.reset();
+            }
+        }
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+                this.radius = Math.random() * 2;
+                this.color = '#fff';
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+        }
+
+        function setup() {
+            for (let i = 0; i < 30; i++) hearts.push(new Heart());
+            for (let i = 0; i < 100; i++) particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(p => { p.update(); p.draw(); });
+            hearts.forEach(h => { h.update(); h.draw(); });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', init);
+        init();
+        setup();
+        animate();
+    </script>
+</body>
+</html>
