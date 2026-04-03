@@ -3,112 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Celebration for Yuri & You</title>
+    <title>TERMINAL_YURI_SYSTEM</title>
     <style>
         :root {
-            --primary-pink: #ff85a1;
-            --secondary-pink: #ffb3c1;
-            --sakura-white: #fff5f8;
-            --text-glow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 133, 161, 0.6);
+            --hacker-green: #00ff41;
+            --sakura-pink: #ff85a1;
+            --cyber-blue: #00f2ff;
         }
 
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
             overflow: hidden;
-            background: radial-gradient(circle at center, #fff, #ffeef2);
-            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
-            -webkit-tap-highlight-color: transparent; /* タップ時のハイライトを消す */
+            background-color: #050505;
+            font-family: 'Courier New', Courier, monospace;
+            color: var(--hacker-green);
         }
 
-        /* 画像コンテナ */
-        #photo-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 85%;
-            max-width: 400px;
-            height: auto;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            z-index: 5;
-            /* かわいいピンクの枠線 */
-            border: 8px solid #fff;
-            background-color: #fff;
-        }
-
-        #photo {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        /* テキストエリア */
-        #overlay {
-            position: absolute;
-            bottom: 5vh;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            color: #fff;
-            pointer-events: none;
-            z-index: 10;
-            width: 90%;
-            max-width: 600px;
-        }
-
-        h1 {
-            font-size: 8vw;
-            margin: 0;
-            color: var(--primary-pink);
-            text-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            animation: pulse 2.5s infinite ease-in-out;
-            letter-spacing: 2px;
-            line-height: 1.1;
-        }
-
-        p {
-            font-size: 4vw;
-            color: #555;
-            opacity: 0.9;
-            margin-top: 10px;
-            letter-spacing: 1px;
-            background: rgba(255, 255, 255, 0.7);
-            padding: 5px 15px;
-            border-radius: 20px;
-            display: inline-block;
-        }
-
-        /* レスポンシブ */
-        @media (min-width: 768px) {
-            h1 { font-size: 3rem; }
-            p { font-size: 1.2rem; }
-        }
-
-        /* キャンバス（エフェクト用） */
         canvas {
-            display: block;
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             z-index: 1;
-            pointer-events: none; /* タップを背後の写真コンテナに通す */
         }
 
-        /* 画像コンテナ自体をタップ可能にする */
-        #photo-container {
-            cursor: pointer;
-            pointer-events: auto;
+        /* センターユニット（写真） */
+        #frame {
+            position: absolute;
+            top: 45%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 75vw;
+            max-width: 350px;
+            aspect-ratio: 3/4;
+            z-index: 10;
+            border: 2px solid var(--sakura-pink);
+            box-shadow: 0 0 20px var(--sakura-pink), inset 0 0 10px var(--sakura-pink);
+            background: #000;
+            overflow: hidden;
+            cursor: crosshair;
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.03); filter: brightness(1.1); }
+        #frame img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            filter: contrast(1.1) brightness(0.9);
+            opacity: 0.85;
+            transition: opacity 0.3s;
+        }
+
+        #frame:active img { opacity: 1; }
+
+        /* スキャンライン等のHUD演出 */
+        #frame::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* テキスト表示 */
+        #info-panel {
+            position: absolute;
+            bottom: 30px; left: 20px;
+            z-index: 20;
+            font-size: 12px;
+            text-transform: uppercase;
+            line-height: 1.5;
+            text-shadow: 0 0 5px var(--hacker-green);
+        }
+
+        .glitch {
+            font-weight: bold;
+            font-size: 24px;
+            color: var(--sakura-pink);
+            text-shadow: 2px 0 var(--cyber-blue), -2px 0 #fff;
+            margin-bottom: 5px;
+        }
+
+        #signature {
+            position: absolute;
+            top: 20px; right: 20px;
+            z-index: 20;
+            font-size: 14px;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.5);
         }
     </style>
 </head>
@@ -116,214 +96,127 @@
 
     <canvas id="canvas"></canvas>
 
-    <div id="photo-container">
-        <img src="yuri_photo.jpg" alt="Yuri" id="photo">
+    <div id="signature">PRODUCED BY DAICHI</div>
+
+    <div id="frame">
+        <img src="yuri_photo.jpg" alt="Target: Yuri">
     </div>
 
-    <div id="overlay">
-        <h1>Beautiful Start</h1>
-        <p>with Yuri & You</p>
+    <div id="info-panel">
+        <div class="glitch">ENCRYPTED_LOVE_v1.0</div>
+        <div>STATUS: CONNECTED TO YURI</div>
+        <div>LOCATION: NAGANO_NODE_01</div>
+        <div>ENCRYPTION: AES-256_HEART</div>
+        <div id="coords">COORD: X:0, Y:0</div>
     </div>
 
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const photoContainer = document.getElementById('photo-container');
+        const frame = document.getElementById('frame');
+        const coords = document.getElementById('coords');
 
         let particles = [];
-        let hearts = [];
-        let sakuraPetals = [];
-
+        const chars = "010101桜愛YURI幸福DAICHI∞Σπ";
+        
         function init() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            
-            // 再生成
-            particles = [];
-            hearts = [];
-            sakuraPetals = [];
-            setup();
         }
 
-        // --- 共通クラス ---
-        class FloatingObject {
-            constructor(type) {
-                this.type = type;
+        // デジタルな雨（マトリックス風）
+        class Drop {
+            constructor() {
                 this.reset();
             }
             reset() {
                 this.x = Math.random() * canvas.width;
-                this.y = canvas.height + (Math.random() * 200 + 50);
-                this.speed = Math.random() * 1.5 + 0.5;
-                this.angle = Math.random() * Math.PI * 2;
-                this.frequency = Math.random() * 0.02 + 0.01;
-
-                if (this.type === 'heart') {
-                    this.size = Math.random() * 15 + 8;
-                    this.amplitude = Math.random() * 40 + 10;
-                    this.color = `hsla(${Math.random() * 20 + 340}, 100%, 75%, ${Math.random() * 0.4 + 0.4})`;
-                } else if (this.type === 'sakura') {
-                    this.size = Math.random() * 8 + 5;
-                    this.amplitude = Math.random() * 60 + 20;
-                    this.color = `hsla(${Math.random() * 10 + 350}, 100%, 90%, ${Math.random() * 0.3 + 0.5})`;
-                    this.rotation = Math.random() * Math.PI * 2;
-                    this.rotationSpeed = (Math.random() - 0.5) * 0.05;
-                } else { // particle
-                    this.resetParticle();
-                }
-            }
-            resetParticle() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.vx = (Math.random() - 0.5) * 0.8;
-                this.vy = (Math.random() - 0.5) * 0.8;
-                this.radius = Math.random() * 1.2;
-                this.color = 'rgba(255, 180, 200, 0.6)';
+                this.y = Math.random() * -canvas.height;
+                this.speed = Math.random() * 5 + 2;
+                this.fontSize = Math.random() * 12 + 8;
+                this.char = chars[Math.floor(Math.random() * chars.length)];
             }
             draw() {
-                ctx.save();
-                if (this.type === 'heart') {
-                    ctx.fillStyle = this.color;
-                    ctx.beginPath();
-                    const x = this.x + Math.sin(this.angle) * this.amplitude;
-                    const y = this.y;
-                    ctx.moveTo(x, y);
-                    ctx.bezierCurveTo(x - this.size / 2, y - this.size / 2, x - this.size, y + this.size / 3, x, y + this.size);
-                    ctx.bezierCurveTo(x + this.size, y + this.size / 3, x + this.size / 2, y - this.size / 2, x, y);
-                    ctx.fill();
-                } else if (this.type === 'sakura') {
-                    ctx.fillStyle = this.color;
-                    ctx.translate(this.x + Math.sin(this.angle) * this.amplitude, this.y);
-                    ctx.rotate(this.rotation);
-                    ctx.beginPath();
-                    // 簡易的な桜の花びらの形
-                    ctx.moveTo(0, 0);
-                    ctx.bezierCurveTo(-this.size, -this.size/2, -this.size/2, this.size, 0, this.size/2);
-                    ctx.bezierCurveTo(this.size/2, this.size, this.size, -this.size/2, 0, 0);
-                    ctx.fill();
-                } else { // particle
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = this.color;
-                    ctx.fill();
-                }
-                ctx.restore();
+                ctx.fillStyle = "rgba(255, 133, 161, 0.3)"; // さくら色マトリックス
+                ctx.font = this.fontSize + "px monospace";
+                ctx.fillText(this.char, this.x, this.y);
             }
             update() {
-                if (this.type === 'particle') {
-                    this.x += this.vx;
-                    this.y += this.vy;
-                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-                } else {
-                    this.y -= this.speed;
-                    this.angle += this.frequency;
-                    if (this.type === 'sakura') this.rotation += this.rotationSpeed;
-                    if (this.y < -(this.size * 2)) this.reset();
-                }
+                this.y += this.speed;
+                if (this.y > canvas.height) this.reset();
+                if (Math.random() > 0.98) this.char = chars[Math.floor(Math.random() * chars.length)];
             }
         }
 
-        // --- タップエフェクトクラス ---
-        class TapEffect {
+        // 数学的タップエフェクト
+        class MathRipple {
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                this.size = Math.random() * 20 + 15;
-                this.speedX = (Math.random() - 0.5) * 8;
-                this.speedY = (Math.random() - 0.5) * 8 - 3; // 少し上に弾ける
-                this.life = 1.0; // 1.0から0.0へ
-                this.decay = Math.random() * 0.02 + 0.015;
-                this.color = `hsla(${Math.random() * 30 + 330}, 100%, 70%, `; // 透明度はlifeで調整
-                this.rotation = Math.random() * Math.PI * 2;
-                this.rotationSpeed = (Math.random() - 0.5) * 0.2;
+                this.r = 1;
+                this.opacity = 1;
             }
             draw() {
-                ctx.save();
-                ctx.fillStyle = this.color + this.life + ')';
-                ctx.translate(this.x, this.y);
-                ctx.rotate(this.rotation);
+                ctx.strokeStyle = `rgba(0, 242, 255, ${this.opacity})`;
+                ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.bezierCurveTo(-this.size, -this.size/2, -this.size/2, this.size, 0, this.size/2);
-                ctx.bezierCurveTo(this.size/2, this.size, this.size, -this.size/2, 0, 0);
-                ctx.fill();
-                ctx.restore();
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // 幾何学ライン
+                ctx.beginPath();
+                ctx.moveTo(this.x - this.r, this.y);
+                ctx.lineTo(this.x + this.r, this.y);
+                ctx.moveTo(this.x, this.y - this.r);
+                ctx.lineTo(this.x, this.y + this.r);
+                ctx.stroke();
             }
             update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.speedY += 0.1; // 重力
-                this.rotation += this.rotationSpeed;
-                this.life -= this.decay;
+                this.r += 4;
+                this.opacity -= 0.02;
             }
         }
 
-        let tapEffects = [];
+        let drops = [];
+        let ripples = [];
 
         function setup() {
-            // 数をスマホ向けに最適化
-            const isMobile = window.innerWidth < 768;
-            const heartCount = isMobile ? 12 : 25;
-            const sakuraCount = isMobile ? 15 : 30;
-            const particleCount = isMobile ? 50 : 80;
-
-            for (let i = 0; i < heartCount; i++) hearts.push(new FloatingObject('heart'));
-            for (let i = 0; i < sakuraCount; i++) sakuraPetals.push(new FloatingObject('sakura'));
-            for (let i = 0; i < particleCount; i++) particles.push(new FloatingObject('particle'));
+            for(let i = 0; i < 60; i++) drops.push(new Drop());
         }
 
         function animate() {
-            // 背景（フェード）
-            ctx.fillStyle = 'rgba(255, 245, 248, 0.2)';
+            ctx.fillStyle = "rgba(5, 5, 5, 0.15)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 描画順：パーティクル -> 桜 -> ハート -> タップエフェクト
-            particles.forEach(p => { p.update(); p.draw(); });
-            sakuraPetals.forEach(s => { s.update(); s.draw(); });
-            hearts.forEach(h => { h.update(); h.draw(); });
-
-            // タップエフェクトの更新・描画・削除
-            for (let i = tapEffects.length - 1; i >= 0; i--) {
-                tapEffects[i].update();
-                tapEffects[i].draw();
-                if (tapEffects[i].life <= 0) {
-                    tapEffects.splice(i, 1);
-                }
+            drops.forEach(d => { d.update(); d.draw(); });
+            
+            for(let i = ripples.length-1; i>=0; i--) {
+                ripples[i].update();
+                ripples[i].draw();
+                if(ripples[i].opacity <= 0) ripples.splice(i, 1);
             }
 
             requestAnimationFrame(animate);
         }
 
-        // --- イベントリスナー（スマホ対応） ---
-        window.addEventListener('resize', init);
-        
-        // 画像コンテナ（ゆりさんの写真）へのタップ
-        function handleTap(e) {
-            e.preventDefault();
-            
-            // タップ/クリック位置を取得
-            let posX, posY;
-            if (e.touches) { // スマホ
-                posX = e.touches[0].clientX;
-                posY = e.touches[0].clientY;
-            } else { // PC
-                posX = e.clientX;
-                posY = e.clientY;
-            }
+        // インタラクション
+        frame.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            createEffect(touch.clientX, touch.clientY);
+        });
 
-            // 弾ける花びらを生成
-            for (let i = 0; i < 8; i++) {
-                tapEffects.push(new TapEffect(posX, posY));
-            }
+        frame.addEventListener('mousedown', (e) => {
+            createEffect(e.clientX, e.clientY);
+        });
+
+        function createEffect(x, y) {
+            ripples.push(new MathRipple(x, y));
+            coords.innerText = `COORD: X:${Math.floor(x)}, Y:${Math.floor(y)}`;
         }
 
-        photoContainer.addEventListener('touchstart', handleTap, { passive: false });
-        // PCでの動作確認用
-        photoContainer.addEventListener('click', handleTap);
-        
-        // 初回実行
-        init(); 
+        window.addEventListener('resize', init);
+        init();
+        setup();
         animate();
     </script>
 </body>
